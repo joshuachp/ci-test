@@ -15,7 +15,7 @@ env:
   RUSTC_WRAPPER: "sccache"
   RUSTFLAGS: -D warnings
   RUSTDOCFLAGS: -D warnings
-  MAIN_CRATE: "@MAIN_CRATE@"
+  MAIN_CRATE: "ci-test"
 jobs:
   fmt:
     runs-on: ubuntu-24.04
