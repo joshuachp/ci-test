@@ -14,7 +14,7 @@ env:
   RUSTC_WRAPPER: "sccache"
 jobs:
   sanitizers:
-    runs-on: ubuntu-34.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
