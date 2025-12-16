@@ -29,8 +29,10 @@ listPackage() {
 
 pkgsFiles=$(
     # Add <(listPackage "@OTHER_CRATE@") \
+    # <(cargo package --allow-dirty -l -p "ci-test") \
     cat \
-        <(cargo package --allow-dirty -l -p "ci-test") |
+        <(listPackage "ci-bin") \
+        <(listPackage "ci-lib") |
         sort
 )
 localFiles=$(

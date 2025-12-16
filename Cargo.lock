@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
-name = "ci-test"
+name = "ci-bin"
+version = "0.1.0"
+dependencies = [
+ "ci-lib",
+]
+
+[[package]]
+name = "ci-lib"
 version = "0.1.0"
