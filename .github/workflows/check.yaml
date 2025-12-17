@@ -37,6 +37,47 @@ jobs:
       - uses: mozilla-actions/sccache-action@v0.0.9
       - name: cargo clippy
         run: cargo clippy --locked --all-targets --all-features --workspace
+
+  cross:
+    runs-on: ubuntu-24.04
+    # use Debian to add other architectures
+    container: debian:13.2
+    name: cross / ${{ matrix.target.rust }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - rust: aarch64-unknown-linux-gnu
+            deb: arm64
+            toolchain: gcc-aarch64-linux-gnu
+          - rust: aarch64-unknown-linux-musl
+            deb: arm64
+            toolchain: gcc-aarch64-linux-gnu
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+    steps:
+      - name: install toolchain and deps
+        run: |
+          dpkg --add-architecture ${{ matrix.target.deb }}
+          apt-get update
+          apt-get install -y curl git build-essential ${{ matrix.target.toolchain }}
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+        with:
+          target: ${{ matrix.target.rust }}
+      - run: |
+          echo '. "$HOME/.cargo/env"' >> ~/.bashrc
+          echo '. "$HOME/.cargo/env"' >> ~/.profile
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - name: cargo build cross
+        run: |
+          cargo build --workspace --all-features --target ${{ matrix.target.rust }}
+
   doc:
     runs-on: ubuntu-24.04
     steps:
@@ -52,22 +93,6 @@ jobs:
         uses: dtolnay/install@cargo-docs-rs
       - run: |
           cargo docs-rs --locked -p "$MAIN_CRATE"
-  features:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-      - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
-      - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: taiki-e/install-action@v2.63.3
-        with:
-          tool: cargo-hack
-      - name: cargo hack test
-        # Doesn't test all combination of features, but the space is becoming too large and it takes
-        # too long
-        run: cargo hack --each-feature test --locked -p "$MAIN_CRATE"
   minimal-versions:
     runs-on: ubuntu-24.04
     steps:

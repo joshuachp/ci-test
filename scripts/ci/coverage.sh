@@ -59,8 +59,6 @@ crates=(
 
 # Helpful for testing changes in the generation options
 if [[ ${1:-} != '--no-gen' ]]; then
-    cargo +nightly clean
-
     mkdir -p "$COVERAGE_OUT_DIR"
     mkdir -p "$PROFS_DIR"
 

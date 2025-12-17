@@ -8,4 +8,3 @@ mod ci 'scripts/ci'
 
 help:
     just --list
-

@@ -12,6 +12,7 @@ env:
   CARGO_TERM_COLOR: always
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
+  MAIN_CRATE: "ci-lib"
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -30,13 +31,47 @@ jobs:
       # https://github.com/rust-lang/cargo/issues/6669
       - name: cargo test doc
         run: cargo test --locked --all-features --doc --workspace
+
+  test-release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: taiki-e/install-action@v2.63.3
+        with:
+          tool: cargo-nextest
+      - name: cargo nextest run
+        run: cargo nextest run --locked --all-features --all-targets --workspace --release
+
+  features:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: taiki-e/install-action@v2.63.3
+        with:
+          tool: cargo-hack
+      - name: cargo hack test
+        # Doesn't test all combination of features, but the space is becoming too large and it takes
+        # too long
+        run: cargo hack --each-feature test --locked -p "$MAIN_CRATE"
   os-check:
     runs-on: ${{ matrix.os }}
     name: os-check / ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os:
+          - macos-latest
+          - windows-latest
     steps:
       - uses: actions/checkout@v6
         with:
@@ -51,6 +86,7 @@ jobs:
           tool: cargo-nextest
       - name: cargo nextest run
         run: cargo nextest run --locked --all-features --all-targets --workspace
+
   coverage:
     runs-on: ubuntu-24.04
     steps:
