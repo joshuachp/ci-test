@@ -1,52 +1,94 @@
 name: publish
-# When a release is published or called manually
 on:
-  release:
-    types:
-      - published
   workflow_dispatch:
-# Only needs to clone the repository
+  push:
+    branches:
+      - main
+      - release-*
 permissions:
-  contents: read
+  # release pr
+  pull-requests: write
+  contents: write
   # crates.io login
   id-token: write
 # Safer shell
 defaults:
   run:
     shell: bash
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  # It's not safe to cancel the publish
-  cancel-in-progress: false
 env:
   CI: "true"
   CARGO_TERM_COLOR: always
 jobs:
-  # Check that the create can be compiled with only the packaged files
-  for-publish:
+  auth:
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+    outputs:
+      github-token: ${{ steps.github.outputs.token }}
+      crates-io-token: ${{ steps.creates-io.outputs.token }}
+    steps:
+      # Generating a GitHub token, so that PRs and tags created by
+      # the release-plz-action can trigger actions workflows.
+      - name: Generate GitHub token
+        uses: actions/create-github-app-token@v2.2.1
+        id: github
+        with:
+          # GitHub App ID secret name
+          app-id: ${{ vars.APP_ID }}
+          # GitHub App private key secret name
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      # # Generating a Crates.io token, to publish the crate
+      # - name: Authenticate with registry
+      #   uses: rust-lang/crates-io-auth-action@v1.0.3
+      #   id: creates-io
+  # Release unpublished packages.
+  release:
+    needs: [auth]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           submodules: true
       - uses: ./.github/actions/install-deps
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
-      - uses: mozilla-actions/sccache-action@v0.0.9
-      - run: ./scripts/ci/check-for-publish.sh
-  publish:
-    needs: [for-publish]
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
+      - name: create new release
+        uses: release-plz/action@v0.5.120
         with:
-          submodules: true
-      - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
-      - name: Authenticate with registry
-        uses: rust-lang/crates-io-auth-action@v1.0.3
-        id: auth
-      - name: cargo publish
+          command: release
         env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-        run: |
-          cargo publish --locked --workspace
+          GITHUB_TOKEN: ${{ needs.auth.outputs.github-token }}
+          # CARGO_REGISTRY_TOKEN: ${{ needs.auth.outputs.crates-io-token }}
+
+  # Create a PR with the new versions and changelog, preparing the next release.
+  release-pr:
+    name: release-pr
+    needs: [auth]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - name: create release pr
+        uses: release-plz/action@v0.5.120
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ needs.auth.outputs.github-token }}
+          # CARGO_REGISTRY_TOKEN: ${{ needs.auth.outputs.crates-io-token }}

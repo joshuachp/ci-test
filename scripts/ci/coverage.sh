@@ -51,9 +51,10 @@ export COVERAGE_OUT_DIR="$CARGO_TARGET_DIR/debug/coverage"
 export RUSTFLAGS="-Cinstrument-coverage -Zcoverage-options=branch --cfg=__coverage"
 export CARGO_INCREMENTAL=0
 
-src_crate='ci-test'
+src_crate=''
 crates=(
-    "$src_crate"
+    "ci-bin"
+    "ci-lib"
 )
 
 # Helpful for testing changes in the generation options

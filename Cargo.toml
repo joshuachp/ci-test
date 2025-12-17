@@ -1,7 +1,12 @@
-[package]
-name = "ci-test"
+[workspace]
+resolver = "3"
+members = ["ci-bin", "ci-lib"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
-publish = false
+rust-version = "1.85"
 
-[dependencies]
+[workspace.dependencies]
+ci-lib = { path = "./ci-lib", default-features = false, version = "=0.1.0" }
+
