@@ -19,30 +19,6 @@ env:
   CI: "true"
   CARGO_TERM_COLOR: always
 jobs:
-  auth:
-    runs-on: ubuntu-24.04
-    permissions:
-      id-token: write
-    outputs:
-      github-token: ${{ steps.github.outputs.token }}
-      crates-io-token: ${{ steps.creates-io.outputs.token }}
-    steps:
-      # Generating a GitHub token, so that PRs and tags created by
-      # the release-plz-action can trigger actions workflows.
-      - name: Generate GitHub token
-        uses: actions/create-github-app-token@v2.2.1
-        id: github
-        with:
-          # GitHub App ID secret name
-          app-id: ${{ vars.APP_ID }}
-          # GitHub App private key secret name
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          # the token in used in other steps
-          skip-token-revoke: true
-      # # Generating a Crates.io token, to publish the crate
-      # - name: Authenticate with registry
-      #   uses: rust-lang/crates-io-auth-action@v1.0.3
-      #   id: creates-io
   # Release unpublished packages.
   release:
     needs: [auth]
@@ -60,13 +36,25 @@ jobs:
           submodules: true
       - uses: ./.github/actions/install-deps
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - name: Generate GitHub token
+        uses: actions/create-github-app-token@v2.2.1
+        id: github
+        with:
+          # GitHub App ID secret name
+          app-id: ${{ vars.APP_ID }}
+          # GitHub App private key secret name
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      # # Generating a Crates.io token, to publish the crate
+      # - name: Authenticate with registry
+      #   uses: rust-lang/crates-io-auth-action@v1.0.3
+      #   id: creates-io
       - name: create new release
         uses: release-plz/action@v0.5.120
         with:
           command: release
         env:
-          GITHUB_TOKEN: ${{ needs.auth.outputs.github-token }}
-          # CARGO_REGISTRY_TOKEN: ${{ needs.auth.outputs.crates-io-token }}
+          GITHUB_TOKEN: ${{ steps.github.outputs.token }}
+          # CARGO_REGISTRY_TOKEN: ${{ steps.crates-io.outputs.token }}
 
   # Create a PR with the new versions and changelog, preparing the next release.
   release-pr:
@@ -87,10 +75,22 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/install-deps
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - name: Generate GitHub token
+        uses: actions/create-github-app-token@v2.2.1
+        id: github
+        with:
+          # GitHub App ID secret name
+          app-id: ${{ vars.APP_ID }}
+          # GitHub App private key secret name
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      # # Generating a Crates.io token, to publish the crate
+      # - name: Authenticate with registry
+      #   uses: rust-lang/crates-io-auth-action@v1.0.3
+      #   id: creates-io
       - name: create release pr
         uses: release-plz/action@v0.5.120
         with:
           command: release-pr
         env:
-          GITHUB_TOKEN: ${{ needs.auth.outputs.github-token }}
-          # CARGO_REGISTRY_TOKEN: ${{ needs.auth.outputs.crates-io-token }}
+          GITHUB_TOKEN: ${{ steps.github.outputs.token }}
+          # CARGO_REGISTRY_TOKEN: ${{ steps.crates-io.outputs.token }}
