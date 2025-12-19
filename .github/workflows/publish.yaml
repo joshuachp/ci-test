@@ -37,6 +37,8 @@ jobs:
           app-id: ${{ vars.APP_ID }}
           # GitHub App private key secret name
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          # the token in used in other steps
+          skip-token-revoke: true
       # # Generating a Crates.io token, to publish the crate
       # - name: Authenticate with registry
       #   uses: rust-lang/crates-io-auth-action@v1.0.3
