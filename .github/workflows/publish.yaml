@@ -21,7 +21,6 @@ env:
 jobs:
   # Release unpublished packages.
   release:
-    needs: [auth]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -59,7 +58,6 @@ jobs:
   # Create a PR with the new versions and changelog, preparing the next release.
   release-pr:
     name: release-pr
-    needs: [auth]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
