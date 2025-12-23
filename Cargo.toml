@@ -9,4 +9,3 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 ci-lib = { path = "./ci-lib", default-features = false, version = "=0.1.0" }
-
