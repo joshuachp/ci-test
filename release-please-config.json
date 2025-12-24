@@ -1,10 +1,68 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/refs/heads/main/schemas/config.json",
+  "changelog-type": "default",
   "release-type": "rust",
-  "changelog-type": "github",
-  "release-as": "0.1.0",
+  "plugins": [
+    "cargo-workspace"
+  ],
   "packages": {
-    "ci-bin": {},
-    "ci-lib": {}
-  }
+    "cli-bin": {},
+    "cli-lib": {}
+  },
+  "changelog-sections": [
+    {
+      "type": "feat",
+      "section": "Added"
+    },
+    {
+      "type": "feature",
+      "section": "Added"
+    },
+    {
+      "type": "fix",
+      "section": "Fixed"
+    },
+    {
+      "type": "perf",
+      "section": "Changed"
+    },
+    {
+      "type": "revert",
+      "section": "Changed"
+    },
+    {
+      "type": "refactor",
+      "section": "Changed"
+    },
+    {
+      "type": "docs",
+      "section": "Other",
+      "hidden": true
+    },
+    {
+      "type": "style",
+      "section": "Other",
+      "hidden": true
+    },
+    {
+      "type": "chore",
+      "section": "Other",
+      "hidden": true
+    },
+    {
+      "type": "test",
+      "section": "Other",
+      "hidden": true
+    },
+    {
+      "type": "build",
+      "section": "Other",
+      "hidden": true
+    },
+    {
+      "type": "ci",
+      "section": "Other",
+      "hidden": true
+    }
+  ]
 }
