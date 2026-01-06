@@ -107,7 +107,7 @@ jobs:
         with:
           toolchain: nightly
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: taiki-e/install-action@v2.65.2
+      - uses: taiki-e/install-action@v2.65.13
         with:
           tool: cargo-hack,cargo-minimal-versions
       - run: rustup default stable
@@ -128,7 +128,7 @@ jobs:
         with:
           toolchain: ${{ matrix.msrv }}
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: taiki-e/install-action@v2.65.2
+      - uses: taiki-e/install-action@v2.65.13
         with:
           tool: cargo-hack
       - name: cargo +${{ matrix.msrv }} check
